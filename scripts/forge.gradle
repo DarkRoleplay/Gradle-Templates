@@ -1,21 +1,31 @@
 project.logger.lifecycle("Loading Forge project module.")
 
 buildscript {
-    repositories {
-        maven {
-            name = 'Official Forge Maven'
-            url = 'https://maven.minecraftforge.net'
-        }
-        mavenCentral()
-    }
+	repositories {
+		maven {
+			name = 'Official Forge Maven'
+			url = 'https://maven.minecraftforge.net'
+		}
+		maven {
+			name = 'Sponge Maven'
+			url = 'https://repo.spongepowered.org/repository/maven-public/' 
+		}
 
-    dependencies {
-        classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: getDefaultString('fg_version', '5.1.+'), changing: true
-    }
+		mavenCentral()
+	}
+
+	dependencies {
+		classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: getDefaultString('fg_version', '5.1.+'), changing: true
+		classpath 'org.spongepowered:mixingradle:0.7-SNAPSHOT'
+	}
 }
 
 apply plugin: net.minecraftforge.gradle.userdev.UserDevPlugin
+apply plugin: 'org.spongepowered.mixin'
 apply plugin: 'eclipse'
+
+//Mixin tracker
+def hasMixin = getDefaultProperty('enable_mixin', false).asBoolean()
 
 // Configurable Forge Properties
 def forgeVersion = getRequiredString('forge_version')
@@ -27,46 +37,57 @@ def mappingVersion = getDefaultString('forge_mapping_version', project.ext.mcVer
 archivesBaseName = "${mod_name}-${minecraft_version}"
 java.toolchain.languageVersion = JavaLanguageVersion.of(16)
 
+if(hasMixin){
+	mixin {
+    add sourceSets.main, project.ext.modId + ".refmap.json"
+	}
+}
+
 minecraft {
-    mappings channel: mappingChannel, version: mappingVersion
+	mappings channel: mappingChannel, version: mappingVersion
 
-    runs {
-        client {
-            workingDirectory project.file('runs/client')
+	runs {
+		client {
+			workingDirectory project.file('runs/client')
+			taskName modName.replaceAll("\\s","") + 'Client'
 
-            taskName modName.replaceAll("\\s","") + 'Client'
+			property 'forge.logging.console.level', loggingLevel
+			if(loggingANSI)
+				property 'terminal.ansi', 'true'
+	
+			if(hasMixin)
+				arg "--mixin=" + project.ext.modId + ".mixins.json"
 
-            property 'forge.logging.console.level', loggingLevel
-            if(loggingANSI)
-                property 'terminal.ansi', 'true'
+			mods {
+				clientRun {
+					source sourceSets.main
+				}
+			}
+		}
 
-            mods {
-                clientRun {
-                    source sourceSets.main
-                }
-            }
-        }
+		server {
+			workingDirectory project.file('runs/server')
+			taskName modName.replaceAll("\\s","") + 'Server'
 
-        server {
-            workingDirectory project.file('runs/server')
+			property 'forge.logging.console.level', loggingLevel
+			if(loggingANSI)
+					property 'terminal.ansi', 'true'
 
-            taskName modName.replaceAll("\\s","") + 'Server'
+			if(hasMixin)
+				arg "--mixin=" + project.ext.modId + ".mixins.json"
 
-            property 'forge.logging.console.level', loggingLevel
-            if(loggingANSI)
-                property 'terminal.ansi', 'true'
-
-            mods {
-                serverRun {
-                    source sourceSets.main
-                }
-            }
-        }
-    }
+			mods {
+				serverRun {
+					source sourceSets.main
+				}
+			}
+		}
+	}
 }
 
 dependencies {
     minecraft "net.minecraftforge:forge:${project.ext.mcVersion}-${forgeVersion}"
+    annotationProcessor 'org.spongepowered:mixin:0.8.4:processor'
 }
 
 processResources {
@@ -80,7 +101,11 @@ processResources {
 
 jar {
     manifest {
-        attributes(['ModLoader': "forge-${forgeVersion}"])
+        attributes([
+					'ModLoader': "forge-${forgeVersion}",
+					if(hasMixin)
+						"MixinConfigs":  project.ext.modId + ".mixins.json"
+				])
     }
 }
 
