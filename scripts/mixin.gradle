@@ -25,6 +25,10 @@ minecraft {
 	}
 }
 
+mixin {
+    add sourceSets.main, project.ext.modId + ".refmap.json"
+}
+
 dependencies {
     annotationProcessor 'org.spongepowered:mixin:0.8.4:processor'
 }
