@@ -30,7 +30,7 @@ mixin {
 }
 
 dependencies {
-    annotationProcessor 'org.spongepowered:mixin:0.8.4:processor'
+    annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
 }
 
 jar {
