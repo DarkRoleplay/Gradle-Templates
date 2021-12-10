@@ -17,6 +17,7 @@ curseforge {
 		apiKey = findProperty('curse_auth')
 		project {
 			id = "${curse_project}"
+			displayName = "$project.ext.mod_name - $project.ext.minecraft_version - v$project.version"
 			releaseType = getDefaultString('curse_release_type', 'alpha')
 			changelog = project.ext.modChangelog
 			changelogType = 'markdown'
@@ -30,8 +31,6 @@ curseforge {
 			mainArtifact(jar) {
 				if (project.hasProperty('curse_requirements') || project.hasProperty('curse_optionals')) {
 					relations {
-						displayName = "$project.ext.mod_name - $project.ext.minecraft_version - v$project.version"
-
 						if (project.hasProperty('curse_requirements')) {
 							for (String req : project.findProperty('curse_requirements').split(', ')) {
 								requiredLibrary req
