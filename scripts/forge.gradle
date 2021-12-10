@@ -7,7 +7,7 @@ def loggingANSI = getDefaultProperty('forge_log_ansi', true).asBoolean()
 def mappingChannel = getDefaultString('forge_mapping_channel', 'official')
 def mappingVersion = getDefaultString('forge_mapping_version', project.ext.mcVersion)
 
-archivesBaseName = "${mod_name}-${minecraft_version}"
+archivesBaseName = "${mod_id}-${minecraft_version}"
 java.toolchain.languageVersion = JavaLanguageVersion.of(17)
 println('Java: ' + System.getProperty('java.version') + ' JVM: ' + System.getProperty('java.vm.version') + '(' + System.getProperty('java.vendor') + ') Arch: ' + System.getProperty('os.arch'))
 
